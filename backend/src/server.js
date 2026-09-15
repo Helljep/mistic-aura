@@ -32,5 +32,4 @@ app.get('/api/health',async()=>{ const result=await query('SELECT 1 AS ok'); ret
 await app.register(authRoutes);await app.register(accountRoutes);await app.register(productRoutes);await app.register(cartRoutes);await app.register(orderRoutes);await app.register(paymentRoutes);await app.register(adminRoutes);
 await app.register(newsletterRoutes);
 app.setErrorHandler((error,request,reply)=>{request.log.error(error);if(error.code==='ER_DUP_ENTRY' || error.errno===1062)return reply.code(409).send({error:'That value is already in use.'});if(error.name==='ZodError')return reply.code(400).send({error:'Please check the submitted information.',details:error.issues.map(i=>({field:i.path.join('.'),message:i.message}))});return reply.code(error.statusCode||500).send({error:config.isProd&&!error.statusCode?'Something went wrong.':error.message});});
-app.get('/*',async(request,reply)=>{if(request.url.startsWith('/api/'))return reply.code(404).send({error:'API route not found'});return reply.sendFile('index.html');});
 await app.listen({port:config.port,host:'0.0.0.0'});
