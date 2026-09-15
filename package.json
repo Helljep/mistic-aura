@@ -1,0 +1,32 @@
+{
+  "name": "mistic-aura",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "dev": "node --watch backend/src/server.js",
+    "migrate": "node backend/scripts/migrate.js",
+    "seed": "node backend/scripts/seed.js",
+    "create-admin": "node backend/scripts/create-admin.js",
+    "check": "node --check backend/src/server.js && node --check backend/src/db.js && node --check backend/src/auth.js && node --check backend/src/routes/auth.js && node --check backend/src/routes/account.js && node --check backend/src/routes/products.js && node --check backend/src/routes/cart.js && node --check backend/src/routes/orders.js && node --check backend/src/routes/payments.js && node --check backend/src/routes/admin.js && node --check backend/src/routes/newsletter.js && node --check js/app.js && node --check js/api.js && node --check js/auth-pages.js && node --check js/admin.js"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^10.0.1",
+    "@fastify/helmet": "^12.0.1",
+    "@fastify/rate-limit": "^10.1.0",
+    "@fastify/static": "^8.2.0",
+    "argon2": "^0.41.1",
+    "dotenv": "^16.6.1",
+    "fastify": "^5.4.0",
+    "fastify-raw-body": "^5.0.0",
+    "nodemailer": "^7.0.6",
+    "speakeasy": "^2.0.0",
+    "stripe": "^18.5.0",
+    "zod": "^4.1.5",
+    "mysql2": "^3.14.3"
+  }
+}

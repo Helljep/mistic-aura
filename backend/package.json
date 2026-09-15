@@ -1,0 +1,32 @@
+{
+  "name": "mistic-aura-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "migrate": "node scripts/migrate.js",
+    "seed": "node scripts/seed.js",
+    "create-admin": "node scripts/create-admin.js",
+    "check": "node --check src/server.js && node --check src/db.js && node --check src/auth.js && node --check src/routes/auth.js && node --check src/routes/account.js && node --check src/routes/products.js && node --check src/routes/cart.js && node --check src/routes/orders.js && node --check src/routes/payments.js && node --check src/routes/admin.js && node --check src/routes/newsletter.js"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^10.0.1",
+    "@fastify/helmet": "^12.0.1",
+    "@fastify/rate-limit": "^10.1.0",
+    "@fastify/static": "^8.2.0",
+    "argon2": "^0.41.1",
+    "dotenv": "^16.6.1",
+    "fastify": "^5.4.0",
+    "nodemailer": "^7.0.6",
+    "mysql2": "^3.14.3",
+    "speakeasy": "^2.0.0",
+    "stripe": "^18.5.0",
+    "zod": "^4.1.5",
+    "fastify-raw-body": "^5.0.0"
+  }
+}
