@@ -21,10 +21,13 @@ async function send(message) {
 }
 
 export function verificationUrl(token) {
-  return `${config.publicAppUrl}/verify-email.html?token=${encodeURIComponent(token)}`;
+  const appUrl = config.publicAppUrl.replace(/\/+$/, '');
+  return `${appUrl}/verify-email.html?token=${encodeURIComponent(token)}`;
 }
+
 export function resetUrl(token) {
-  return `${config.publicAppUrl}/reset-password.html?token=${encodeURIComponent(token)}`;
+  const appUrl = config.publicAppUrl.replace(/\/+$/, '');
+  return `${appUrl}/reset-password.html?token=${encodeURIComponent(token)}`;
 }
 
 export async function sendVerificationEmail({ to, firstName, token }) {
