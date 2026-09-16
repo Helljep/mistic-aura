@@ -53,13 +53,21 @@ export default async function authRoutes(app) {
   app.get('/api/auth/me', async (request,reply)=>{const s=await getSession(request);if(!s?.user_id)return reply.code(401).send({error:'Authentication required'});return {user:{id:s.user_id,email:s.email,firstName:s.first_name,lastName:s.last_name}};});
 
   app.post('/api/auth/resend-verification', async (request)=>{
+    console.log('[AUTH DEBUG] Resend verification request received');
     verifyCsrf(request);
     const b=z.object({email:z.string().trim().toLowerCase().email()}).parse(request.body);
     const r=await query('SELECT id,first_name,email,email_verified_at,status FROM users WHERE email=$1',[b.email]);
+    console.log('[AUTH DEBUG] User lookup:', {
+  email: b.email,
+  found: Boolean(r.rows[0]),
+  status: r.rows[0]?.status,
+  verified: Boolean(r.rows[0]?.email_verified_at)
+});
     if(!r.rows[0]||r.rows[0].status!=='active'||r.rows[0].email_verified_at)return {message:'If your account needs verification, a new email has been sent.'};
     const token=randomToken(32);
     await query('UPDATE email_verifications SET used_at=NOW(3) WHERE user_id=$1 AND used_at IS NULL',[r.rows[0].id]);
     await query(`INSERT INTO email_verifications(id,user_id,token_hash,expires_at) VALUES($1,$2,$3,DATE_ADD(NOW(3), INTERVAL 24 HOUR))`,[randomUUID(),r.rows[0].id,sha256(token)]);
+    console.log('[AUTH DEBUG] Calling sendVerificationEmail for:', r.rows[0].email);
     await sendVerificationEmail({to:r.rows[0].email,firstName:r.rows[0].first_name,token});
     return {message:'If your account needs verification, a new email has been sent.'};
   });

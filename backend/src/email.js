@@ -9,15 +9,75 @@ if (config.smtp.host && config.smtp.user && config.smtp.pass) {
     secure: config.smtp.secure,
     auth: { user: config.smtp.user, pass: config.smtp.pass }
   });
+  if (transporter) {
+  transporter.verify()
+    .then(() => {
+      console.log('[EMAIL DEBUG] SMTP CONNECTION SUCCESS');
+    })
+    .catch(error => {
+      console.error('[EMAIL DEBUG] SMTP CONNECTION FAILED:', {
+        name: error.name,
+        code: error.code,
+        command: error.command,
+        response: error.response,
+        responseCode: error.responseCode,
+        message: error.message
+      });
+    });
+} else {
+  console.log('[EMAIL DEBUG] SMTP TRANSPORTER NOT CREATED');
+}
 }
 
 async function send(message) {
+  console.log('[EMAIL DEBUG] send() called');
+  console.log('[EMAIL DEBUG] SMTP configured:', {
+    host: config.smtp.host,
+    port: config.smtp.port,
+    secure: config.smtp.secure,
+    user: config.smtp.user,
+    from: config.smtp.from,
+    hasPassword: Boolean(config.smtp.pass)
+  });
+
   if (!transporter) {
-    // Safe development fallback: never pretend an email was sent.
-    console.log('[EMAIL DEV MODE]', { to: message.to, subject: message.subject, text: message.text });
+    console.log('[EMAIL DEBUG] NO TRANSPORTER CREATED');
+    console.log('[EMAIL DEBUG] Recipient:', message.to);
+    console.log('[EMAIL DEBUG] Subject:', message.subject);
     return { devMode: true };
   }
-  return transporter.sendMail({ ...message, from: config.smtp.from });
+
+  try {
+    console.log('[EMAIL DEBUG] Calling transporter.sendMail()');
+    console.log('[EMAIL DEBUG] Recipient:', message.to);
+    console.log('[EMAIL DEBUG] Subject:', message.subject);
+
+    const result = await transporter.sendMail({
+      ...message,
+      from: config.smtp.from
+    });
+
+    console.log('[EMAIL DEBUG] sendMail SUCCESS:', {
+      messageId: result.messageId,
+      accepted: result.accepted,
+      rejected: result.rejected,
+      response: result.response,
+      envelope: result.envelope
+    });
+
+    return result;
+  } catch (error) {
+    console.error('[EMAIL DEBUG] sendMail FAILED:', {
+      name: error.name,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+      message: error.message
+    });
+
+    throw error;
+  }
 }
 
 export function verificationUrl(token) {
