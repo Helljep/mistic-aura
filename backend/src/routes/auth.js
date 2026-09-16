@@ -21,7 +21,7 @@ export default async function authRoutes(app) {
   app.post('/api/auth/register', { config: { rateLimit: { max: 5, timeWindow: '15 minutes' } } }, async (request, reply) => {
     verifyCsrf(request);
     const body = registerSchema.parse(request.body);
-    const existing = await query('SELECT id,status FROM users WHERE email=?', [body.email]);
+    const existing = await query('SELECT id,status FROM users WHERE email=$1', [body.email]);
     if (existing.rows[0] && existing.rows[0].status !== 'deleted') return reply.code(409).send({ error: 'An account already exists for this email.' });
 
     const passwordHash = await hashPassword(body.password);
@@ -39,7 +39,7 @@ export default async function authRoutes(app) {
   app.post('/api/auth/login', { config: { rateLimit: { max: 8, timeWindow: '15 minutes' } } }, async (request, reply) => {
     verifyCsrf(request);
     const body=loginSchema.parse(request.body);
-    const result=await query('SELECT * FROM users WHERE email=?',[body.email]);
+    const result=await query('SELECT * FROM users WHERE email=$1',[body.email]);
     const user=result.rows[0];
     const valid=user?await verifyPassword(user.password_hash,body.password).catch(()=>false):false;
     if(!valid || user.status!=='active') return reply.code(401).send({error:'Email or password is incorrect.'});
@@ -55,7 +55,7 @@ export default async function authRoutes(app) {
   app.post('/api/auth/resend-verification', async (request)=>{
     verifyCsrf(request);
     const b=z.object({email:z.string().trim().toLowerCase().email()}).parse(request.body);
-    const r=await query('SELECT id,first_name,email,email_verified_at,status FROM users WHERE email=?',[b.email]);
+    const r=await query('SELECT id,first_name,email,email_verified_at,status FROM users WHERE email=$1',[b.email]);
     if(!r.rows[0]||r.rows[0].status!=='active'||r.rows[0].email_verified_at)return {message:'If your account needs verification, a new email has been sent.'};
     const token=randomToken(32);
     await query('UPDATE email_verifications SET used_at=NOW(3) WHERE user_id=$1 AND used_at IS NULL',[r.rows[0].id]);
@@ -77,7 +77,7 @@ export default async function authRoutes(app) {
   app.post('/api/auth/forgot-password', { config: { rateLimit: { max: 5, timeWindow: '15 minutes' } } }, async (request)=>{
     verifyCsrf(request);
     const b=z.object({email:z.string().trim().toLowerCase().email()}).parse(request.body);
-    const r=await query('SELECT id,first_name,email,status FROM users WHERE email=?',[b.email]);
+    const r=await query('SELECT id,first_name,email,status FROM users WHERE email=$1',[b.email]);
     if(r.rows[0]?.status==='active'){
       const token=randomToken(32);
       await query('UPDATE password_resets SET used_at=NOW(3) WHERE user_id=$1 AND used_at IS NULL',[r.rows[0].id]);
