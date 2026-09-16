@@ -18,11 +18,19 @@ const pool = mysql.createPool({
 });
 
 function convertPlaceholders(text, params = []) {
+  // If the query already uses MySQL ? placeholders,
+  // pass the parameters through unchanged.
+  if (!/\$\d+/.test(text)) {
+    return { sql: text, values: params };
+  }
+
+  // Convert PostgreSQL-style $1, $2, etc. to MySQL ?
   const values = [];
   const sql = text.replace(/\$(\d+)/g, (_, n) => {
     values.push(params[Number(n) - 1]);
     return '?';
   });
+
   return { sql, values };
 }
 
