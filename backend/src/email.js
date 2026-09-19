@@ -90,13 +90,42 @@ export function resetUrl(token) {
   return `${appUrl}/reset-password.html?token=${encodeURIComponent(token)}`;
 }
 
-export async function sendVerificationEmail({ to, firstName, token }) {
-  const url = verificationUrl(token);
+export async function sendVerificationEmail({ to, firstName, code }) {
   return send({
     to,
-    subject: 'Verify your Mistic Aura email',
-    text: `Hi ${firstName},\n\nPlease verify your Mistic Aura email address:\n${url}\n\nThis link expires in 24 hours.`,
-    html: `<p>Hi ${escapeHtml(firstName)},</p><p>Please verify your Mistic Aura email address.</p><p><a href="${url}">Verify my email</a></p><p>This link expires in 24 hours.</p>`
+    subject: 'Your Mistic Aura verification code',
+    text: `Hi ${firstName},
+
+Welcome to Mistic Aura.
+
+Your email verification code is:
+
+${code}
+
+This code expires in 10 minutes.
+
+If you did not create a Mistic Aura account, you can ignore this email.
+
+Mistic Aura`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#222">
+        <p>Hi ${escapeHtml(firstName)},</p>
+
+        <p>Welcome to Mistic Aura.</p>
+
+        <p>Your email verification code is:</p>
+
+        <div style="font-size:32px;font-weight:700;letter-spacing:8px;margin:24px 0;">
+          ${escapeHtml(code)}
+        </div>
+
+        <p>This code expires in <strong>10 minutes</strong>.</p>
+
+        <p>If you did not create a Mistic Aura account, you can ignore this email.</p>
+
+        <p>Mistic Aura</p>
+      </div>
+    `
   });
 }
 

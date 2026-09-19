@@ -1,1 +1,83 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Verify email · Mistic Aura</title><link rel="stylesheet" href="css/styles.css"><link rel="stylesheet" href="css/auth.css"></head><body class="auth-page"><main class="auth-shell"><div class="auth-brand"><a class="logo" href="index.html">mistic aura<span>THE ART OF SLOW LIVING</span></a></div><section class="auth-card"><small class="eyebrow">ONE SMALL STEP</small><h1>Verify your email.</h1><p>Use the link in your Mistic Aura email. Verification links expire after 24 hours.</p><div id="form-message" class="form-message"></div><form id="verify-form" class="auth-form"><label>Email address<input name="email" type="email" autocomplete="email" required></label><button class="button" type="submit">Resend verification <span>→</span></button></form><div class="auth-links"><a href="login.html">Back to sign in</a><a href="index.html">Back home</a></div></section></main><script src="js/api.js"></script><script src="js/auth-pages.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Verify email · Mistic Aura</title>
+
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+
+<body class="auth-page">
+
+  <main class="auth-shell">
+
+    <div class="auth-brand">
+      <a class="logo" href="index.html">
+        mistic aura
+        <span>THE ART OF SLOW LIVING</span>
+      </a>
+    </div>
+
+    <section class="auth-card">
+
+      <small class="eyebrow">ONE SMALL STEP</small>
+
+      <h1>Verify your email.</h1>
+
+      <p>
+        We've sent a 6-digit verification code to your email address.
+        The code expires after 10 minutes.
+      </p>
+
+      <div id="form-message" class="form-message"></div>
+
+      <form id="verify-form" class="auth-form">
+
+        <label>
+          Email address
+          <input
+            name="email"
+            type="email"
+            autocomplete="email"
+            required
+          >
+        </label>
+
+        <label>
+          Verification code
+          <input
+            name="code"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            pattern="[0-9]{6}"
+            maxlength="6"
+            minlength="6"
+            placeholder="123456"
+            required
+          >
+        </label>
+
+        <button class="button" type="submit">
+          Verify email <span>→</span>
+        </button>
+
+      </form>
+
+      <div class="auth-links">
+        <a href="#" id="resend-code">Resend code</a>
+        <a href="login.html">Back to sign in</a>
+        <a href="index.html">Back home</a>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/auth-pages.js"></script>
+
+</body>
+</html>
