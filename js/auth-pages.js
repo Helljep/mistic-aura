@@ -43,27 +43,93 @@ document.addEventListener('DOMContentLoaded', () => {
       authMessage('Email verified successfully. Please sign in to continue.');
     }
 
-    login.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const f = new FormData(login);
-      const email = String(f.get('email') || '').trim().toLowerCase();
+  login.addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-      try {
-        await authRequest('/api/auth/login', { email, password: f.get('password') });
-        location.href = 'account.html';
-      } catch (err) {
-        authMessage(err.message, true);
+  if (login.dataset.submitting === 'true') return;
 
-        if (err.data?.code === 'EMAIL_NOT_VERIFIED') {
-          const resend = document.querySelector('#resend-link');
-          if (resend) {
-            const link = resend.querySelector('a');
-            if (link) link.href = `verify-email.html?email=${encodeURIComponent(email)}`;
-            resend.classList.remove('hidden');
-          }
-        }
-      }
+  login.dataset.submitting = 'true';
+
+  const f = new FormData(login);
+
+  const email = String(
+    f.get('email') || ''
+  ).trim().toLowerCase();
+
+  const button = login.querySelector(
+    'button[type="submit"]'
+  );
+
+  const originalText = button?.innerHTML ||
+    'Sign in <span>→</span>';
+
+  if (button) {
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    button.innerHTML = 'Signing in…';
+  }
+
+  try {
+
+    await authRequest('/api/auth/login', {
+      email,
+      password: f.get('password')
     });
+
+    /*
+     * Respect the page the customer originally wanted.
+     * Only allow local HTML paths.
+     */
+    const requestedReturn =
+      params.get('return');
+
+    const destination =
+      requestedReturn &&
+      /^[a-zA-Z0-9_-]+\.html(?:#[a-zA-Z0-9_-]+)?$/
+        .test(requestedReturn)
+        ? requestedReturn
+        : 'account.html';
+
+    window.location.replace(destination);
+
+  } catch (err) {
+
+    authMessage(
+      err?.message ||
+      'Unable to sign in. Please try again.',
+      true
+    );
+
+    if (
+      err.data?.code === 'EMAIL_NOT_VERIFIED'
+    ) {
+
+      const resend =
+        document.querySelector('#resend-link');
+
+      if (resend) {
+
+        const link =
+          resend.querySelector('a');
+
+        if (link) {
+          link.href =
+            `verify-email.html?email=${encodeURIComponent(email)}`;
+        }
+
+        resend.classList.remove('hidden');
+      }
+    }
+
+    login.dataset.submitting = 'false';
+
+    if (button) {
+      button.disabled = false;
+      button.removeAttribute('aria-busy');
+      button.innerHTML = originalText;
+    }
+  }
+});
   }
 
   /* -------------------------------------------------- FORGOT PASSWORD */

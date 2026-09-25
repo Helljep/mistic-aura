@@ -2,3 +2,34 @@
 @media(max-width:600px){.auth-card{padding:30px 22px}.auth-card h1{font-size:40px}.auth-brand .logo{font-size:35px}.auth-links{flex-direction:column}}
 
 .auth-hint{margin-top:18px;font-size:12.5px;color:#6f6253;line-height:1.6;text-align:center}.auth-hint a{color:#355442;border-bottom:1px solid #b9a990;padding-bottom:2px}
+/* ---------------------------------------------------------
+   PREMIUM AUTH LOADING STATES
+   --------------------------------------------------------- */
+
+.auth-form button[aria-busy="true"] {
+  opacity: .82;
+  cursor: wait;
+}
+
+.auth-form button[aria-busy="true"]::after {
+  content: "";
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin-left: 9px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -2px;
+  animation: authButtonSpinner .65s linear infinite;
+}
+
+.auth-form button:disabled {
+  cursor: wait;
+}
+
+@keyframes authButtonSpinner {
+  to {
+    transform: rotate(360deg);
+  }
+}

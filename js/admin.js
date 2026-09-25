@@ -23,17 +23,57 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* ------------------------------------------------------------- SIGN IN */
   const login = document.querySelector('#admin-login-form');
   if (login) {
-    login.addEventListener('submit', async e => {
-      e.preventDefault();
-      const f = new FormData(login);
-      try {
-        await adminAPI('/api/admin/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({ email: f.get('email'), password: f.get('password'), mfaCode: f.get('mfaCode') || undefined })
-        });
-        location.href = 'admin.html';
-      } catch (err) { adminMsg(err.message, true); }
+ login.addEventListener('submit', async e => {
+  e.preventDefault();
+
+  if (login.dataset.submitting === 'true') return;
+
+  login.dataset.submitting = 'true';
+
+  const f = new FormData(login);
+  const submitButton = login.querySelector('button[type="submit"]');
+
+  const originalText = submitButton
+    ? submitButton.innerHTML
+    : 'Sign in securely <span>→</span>';
+
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.setAttribute('aria-busy', 'true');
+    submitButton.innerHTML = 'Signing in…';
+  }
+
+  try {
+    await adminAPI('/api/admin/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: f.get('email'),
+        password: f.get('password'),
+        mfaCode: f.get('mfaCode') || undefined
+      })
     });
+
+    /*
+     * replace() prevents the login page remaining in browser history.
+     */
+    window.location.replace('admin.html');
+
+  } catch (err) {
+
+    adminMsg(
+      err?.message || 'Unable to sign in. Please try again.',
+      true
+    );
+
+    login.dataset.submitting = 'false';
+
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.removeAttribute('aria-busy');
+      submitButton.innerHTML = originalText;
+    }
+  }
+});
   }
 
   const dashboard = document.querySelector('#admin-dashboard');
@@ -127,35 +167,101 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   /* ------------------------------------------------------------ DASHBOARD */
-  try {
-    const me = await adminAPI('/api/admin/me');
-    document.querySelector('#admin-name').textContent = me.admin.firstName;
-    document.querySelector('#admin-name-copy').textContent = me.admin.firstName;
-    document.querySelector('#admin-role').textContent = me.admin.role.replace('_', ' ');
+/* ------------------------------------------------------------ DASHBOARD */
+/* ------------------------------------------------------------ DASHBOARD */
+try {
+  /*
+   * Authentication must be resolved before the dashboard becomes visible.
+   * We also keep the dashboard hidden until its initial data is ready.
+   */
+  const me = await adminAPI('/api/admin/me');
 
-    const [orders, customers, products] = await Promise.all([
-      adminAPI('/api/admin/orders'),
-      adminAPI('/api/admin/customers'),
-      adminAPI('/api/admin/products')
-    ]);
-
-    document.querySelector('#admin-orders').textContent = orders.orders.length;
-    document.querySelector('#admin-customers').textContent = customers.customers.length;
-    document.querySelector('#admin-products').textContent = products.products.length;
-
-    document.querySelector('#orders-table').innerHTML = orders.orders.slice(0, 20).map(o =>
-      `<tr><td>${esc(o.order_number)}</td><td>${esc(o.email || 'Guest')}</td><td>AUD ${Number(o.total).toFixed(2)}</td><td>${esc(o.status)}</td></tr>`
-    ).join('') || '<tr><td colspan="4">No orders yet.</td></tr>';
-
-    document.querySelector('#customers-table').innerHTML = customers.customers.slice(0, 20).map(c =>
-      `<tr><td>${esc(c.first_name)} ${esc(c.last_name)}</td><td>${esc(c.email)}</td><td>${c.email_verified_at ? 'Verified' : 'Pending'}</td></tr>`
-    ).join('') || '<tr><td colspan="3">No customers yet.</td></tr>';
-
-    await Promise.all([loadStock(), loadMovements()]);
-  } catch (err) {
-    location.href = 'admin-login.html';
+  if (!me?.admin) {
+    window.location.replace('admin-login.html');
     return;
   }
+
+  document.querySelector('#admin-name').textContent =
+    me.admin.firstName || 'Admin';
+
+  document.querySelector('#admin-name-copy').textContent =
+    me.admin.firstName || 'Admin';
+
+  document.querySelector('#admin-role').textContent =
+    String(me.admin.role || '').replace(/_/g, ' ');
+
+  const [orders, customers, products] = await Promise.all([
+    adminAPI('/api/admin/orders'),
+    adminAPI('/api/admin/customers'),
+    adminAPI('/api/admin/products')
+  ]);
+
+  document.querySelector('#admin-orders').textContent =
+    orders.orders.length;
+
+  document.querySelector('#admin-customers').textContent =
+    customers.customers.length;
+
+  document.querySelector('#admin-products').textContent =
+    products.products.length;
+
+  document.querySelector('#orders-table').innerHTML =
+    orders.orders.slice(0, 20).map(o =>
+      `<tr>
+        <td>${esc(o.order_number)}</td>
+        <td>${esc(o.email || 'Guest')}</td>
+        <td>AUD ${Number(o.total).toFixed(2)}</td>
+        <td>${esc(o.status)}</td>
+      </tr>`
+    ).join('') ||
+    '<tr><td colspan="4">No orders yet.</td></tr>';
+
+  document.querySelector('#customers-table').innerHTML =
+    customers.customers.slice(0, 20).map(c =>
+      `<tr>
+        <td>${esc(c.first_name)} ${esc(c.last_name)}</td>
+        <td>${esc(c.email)}</td>
+        <td>${c.email_verified_at ? 'Verified' : 'Pending'}</td>
+      </tr>`
+    ).join('') ||
+    '<tr><td colspan="3">No customers yet.</td></tr>';
+
+  /*
+   * Load stock and movement information before revealing
+   * the dashboard so the first visible state is complete.
+   */
+  await Promise.all([
+    loadStock(),
+    loadMovements()
+  ]);
+
+  /*
+   * Everything needed for the initial dashboard is now ready.
+   */
+  dashboard.classList.remove('auth-pending');
+  dashboard.classList.add('auth-ready');
+
+} catch (err) {
+
+  /*
+   * ONLY authentication failures should send the admin to login.
+   * Server/API errors must not destroy the authenticated session.
+   */
+  if (err?.status === 401 || err?.status === 403) {
+    window.location.replace('admin-login.html');
+    return;
+  }
+
+  console.error('Admin dashboard failed to initialise:', err);
+
+  dashboard.classList.remove('auth-pending');
+  dashboard.classList.add('auth-ready');
+
+  adminMsg(
+    'Some dashboard information could not be loaded. Please try again.',
+    true
+  );
+}
 
   document.querySelector('#admin-logout')?.addEventListener('click', async () => {
     try { await adminAPI('/api/admin/auth/logout', { method: 'POST' }); }

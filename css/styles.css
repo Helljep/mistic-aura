@@ -2310,3 +2310,68 @@ html, body {
 .round:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
 .round:disabled:hover{background:transparent;color:inherit}
 #add-product:disabled,#buy-now:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+
+/* Account authentication loading state */
+/*---------------------------------------------------------
+   ACCOUNT AUTHENTICATION UX
+   --------------------------------------------------------- */
+
+.account-page-shell {
+  min-height: 520px;
+}
+
+.account-live {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.account-page-shell.account-ready .account-live {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  animation: accountReveal 240ms ease both;
+}
+
+.account-auth-loading {
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #7c6e5e;
+  font-size: 13px;
+  letter-spacing: .03em;
+}
+
+.account-auth-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(141,119,89,.22);
+  border-top-color: #8d7759;
+  border-radius: 50%;
+  animation: accountSpinner .7s linear infinite;
+}
+
+.account-page-shell.account-ready .account-auth-loading {
+  display: none;
+}
+
+@keyframes accountSpinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes accountReveal {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
