@@ -17,12 +17,12 @@ import orderRoutes from './routes/orders.js';
 import paymentRoutes from './routes/payments.js';
 import adminRoutes from './routes/admin.js';
 import newsletterRoutes from './routes/newsletter.js';
+import fs from 'node:fs/promises';
 
 ensureProductionSecrets();
 const app=Fastify({logger:true,bodyLimit:1_000_000,trustProxy:config.isProd});
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
-const publicRoot=path.resolve(process.env.PUBLIC_ROOT || path.join(__dirname,'../../'));
-console.log('[STATIC DEBUG]', {
+const publicRoot=path.resolve(process.env.PUBLIC_ROOT || path.join(__dirname,'../../public'));console.log('[STATIC DEBUG]', {
   __dirname,
   publicRoot,
   cwd: process.cwd()
@@ -32,6 +32,28 @@ await app.register(helmet,{contentSecurityPolicy:false,crossOriginEmbedderPolicy
 await app.register(rateLimit,{global:true,max:120,timeWindow:'1 minute',errorResponseBuilder:()=>({error:'Too many requests. Please try again shortly.'})});
 await app.register(rawBody,{field:'rawBody',global:false,encoding:false,runFirst:true});
 await app.register(fastifyStatic,{root:publicRoot,prefix:'/'});
+app.get('/index.html', async (request, reply) => {
+  const filePath = path.join(publicRoot, 'index.html');
+
+  try {
+    const html = await fs.readFile(filePath, 'utf8');
+
+    return reply
+      .type('text/html; charset=utf-8')
+      .header('Cache-Control', 'no-cache')
+      .send(html);
+
+  } catch (error) {
+    request.log.error({
+      err: error,
+      filePath
+    }, 'Failed to read index.html');
+
+    return reply.code(500).send({
+      error: 'Unable to load index.html'
+    });
+  }
+});
 app.addHook('onRequest',async(request,reply)=>{if(request.url.startsWith('/api/')&&!request.url.startsWith('/api/payments/webhook'))ensureCsrf(request,reply);});
 app.get('/api/health',async()=>{ const result=await query('SELECT 1 AS ok'); return {ok:result.rows[0]?.ok===1,service:'mistic-aura-api',time:new Date().toISOString(),environment:config.nodeEnv}; });
 await app.register(authRoutes);await app.register(accountRoutes);await app.register(productRoutes);await app.register(cartRoutes);await app.register(orderRoutes);await app.register(paymentRoutes);await app.register(adminRoutes);
