@@ -22,6 +22,11 @@ ensureProductionSecrets();
 const app=Fastify({logger:true,bodyLimit:1_000_000,trustProxy:config.isProd});
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 const publicRoot=path.resolve(process.env.PUBLIC_ROOT || path.join(__dirname,'../../'));
+console.log('[STATIC DEBUG]', {
+  __dirname,
+  publicRoot,
+  cwd: process.cwd()
+});
 await app.register(cookie);
 await app.register(helmet,{contentSecurityPolicy:false,crossOriginEmbedderPolicy:false});
 await app.register(rateLimit,{global:true,max:120,timeWindow:'1 minute',errorResponseBuilder:()=>({error:'Too many requests. Please try again shortly.'})});
